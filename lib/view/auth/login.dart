@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/view/auth/register.dart';
 import 'package:flutter_app/view/dash/dash.dart';
+import 'package:flutter_app/db/helper/auth/loginhelper.dart';
 
 void main() {
   runApp(LoginApp());
@@ -17,6 +18,33 @@ class LoginApp extends StatelessWidget {
 }
 
 class LoginPage extends StatelessWidget {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _login(BuildContext context) async {
+    String username = _usernameController.text;
+    String password = _passwordController.text;
+
+    // Simulating login by checking against the database
+    bool loggedIn = await LoginHelper().checkLogin(username, password);
+
+    if (loggedIn) {
+      // Navigate to dashboard on successful login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => DashboardPage()),
+      );
+    } else {
+      // Show error message on failed login
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid username or password'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +72,7 @@ class LoginPage extends StatelessWidget {
                 ),
                 SizedBox(height: 30.0),
                 TextFormField(
+                  controller: _usernameController,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Username',
@@ -57,6 +86,7 @@ class LoginPage extends StatelessWidget {
                 ),
                 SizedBox(height: 20.0),
                 TextFormField(
+                  controller: _passwordController,
                   style: TextStyle(color: Colors.white),
                   obscureText: true,
                   decoration: InputDecoration(
@@ -71,13 +101,7 @@ class LoginPage extends StatelessWidget {
                 ),
                 SizedBox(height: 20.0),
                 ElevatedButton(
-                  onPressed: () {
-                    // Assuming successful login, navigate to dashboard
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => DashboardPage()),
-                    );
-                  },
+                  onPressed: () => _login(context),
                   child: Text('Login'),
                 ),
                 SizedBox(height: 10.0),

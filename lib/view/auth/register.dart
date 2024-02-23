@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/view/auth/login.dart';
+import 'package:flutter_app/db/helper/auth/registrationhelper.dart';
 
 void main() {
   runApp(RegisterApp());
@@ -16,6 +17,43 @@ class RegisterApp extends StatelessWidget {
 }
 
 class RegisterPage extends StatelessWidget {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _register(BuildContext context) async {
+    String username = _usernameController.text;
+    String password = _passwordController.text;
+
+    // Check if username already exists
+    bool usernameExists =
+        await RegistrationHelper().checkUsernameExists(username);
+
+    if (usernameExists) {
+      // Show error message if username already exists
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Username already exists. Please choose a different one.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      // Register the user if username is not taken
+      await RegistrationHelper().registerUser(username, password);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Registration successful. You can now login.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      // Navigate to the login page after successful registration
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginApp()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,6 +81,7 @@ class RegisterPage extends StatelessWidget {
                 ),
                 SizedBox(height: 30.0),
                 TextFormField(
+                  controller: _usernameController,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Username',
@@ -56,6 +95,7 @@ class RegisterPage extends StatelessWidget {
                 ),
                 SizedBox(height: 20.0),
                 TextFormField(
+                  controller: _passwordController,
                   style: TextStyle(color: Colors.white),
                   obscureText: true,
                   decoration: InputDecoration(
@@ -70,9 +110,7 @@ class RegisterPage extends StatelessWidget {
                 ),
                 SizedBox(height: 20.0),
                 ElevatedButton(
-                  onPressed: () {
-                    // Add registration functionality here
-                  },
+                  onPressed: () => _register(context),
                   child: Text('Register'),
                 ),
                 SizedBox(height: 10.0),
@@ -84,7 +122,7 @@ class RegisterPage extends StatelessWidget {
                     );
                   },
                   child: Text(
-                    'Don\'t have an account? Register here',
+                    'Already have an account? Login here',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),

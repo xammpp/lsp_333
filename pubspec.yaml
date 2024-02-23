@@ -39,6 +39,7 @@ dependencies:
   sqflite: ^2.3.2
   geolocator: ^7.7.1
   path: ^1.9.0
+  provider: ^5.0.0
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/db/helper/auth/user_profilehelper.dart';
+import 'package:flutter_app/session/sessionmanager.dart'; // Import your session manager
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -51,22 +53,37 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   void initState() {
-    // Simulate fetching user data, replace with actual user data retrieval logic
-    _nameController.text = 'John Doe';
-    _emailController.text = 'john.doe@example.com';
-    _phoneNumberController.text = '+1234567890';
     super.initState();
+    _populateFields();
   }
 
-  void _submitForm() {
+  void _populateFields() {
+    // Retrieve user data from session manager or any other source
+    // For demonstration, let's assume session manager has a method getCurrentUser() that returns a user object
+    var currentUser = SessionManager.getCurrentUser();
+    if (currentUser != null) {
+      _nameController.text = currentUser.name;
+      _emailController.text = currentUser.email;
+      _phoneNumberController.text = currentUser.phoneNumber;
+    }
+  }
+
+  void _submitForm() async {
     String name = _nameController.text;
     String email = _emailController.text;
-    String phoneNumber = _phoneNumberController.text;
+    int phoneNumber = int.tryParse(_phoneNumberController.text) ??
+        0; // Convert string to integer
 
-    // You can handle the submitted data as needed, such as updating the user's profile
-    // For demonstration, let's just print the updated profile information
-    print('Updated Profile:');
-    print('Name: $name, Email: $email, Phone Number: $phoneNumber');
+    // Update the user's profile using UserProfileHelper
+    await UserProfileHelper().updateUserProfile(name, email, phoneNumber);
+
+    // Show a snackbar to indicate success
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Profile updated successfully'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
