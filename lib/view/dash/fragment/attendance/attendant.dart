@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/db/helper/attendant/attend.dart';
+import 'package:flutter_app/model/attend.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // Import LatLng
 
 class AttendantPage extends StatefulWidget {
   @override
@@ -8,6 +12,22 @@ class AttendantPage extends StatefulWidget {
 class _AttendantPageState extends State<AttendantPage> {
   TextEditingController _nameController = TextEditingController();
   TextEditingController _locationController = TextEditingController();
+  List<Attendant> _attendanceHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAttendanceHistory();
+  }
+
+  Future<void> _loadAttendanceHistory() async {
+    AttendantHelper helper = AttendantHelper();
+    await AttendantHelper.initialize();
+    List<Attendant> attendants = await helper.getAttendants();
+    setState(() {
+      _attendanceHistory = attendants;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +52,20 @@ class _AttendantPageState extends State<AttendantPage> {
             SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {
-                // Handle form submission
                 _submitForm();
               },
               child: Text('Submit'),
+            ),
+            SizedBox(height: 20.0),
+            Text(
+              'Attendance History',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18.0,
+              ),
+            ),
+            Expanded(
+              child: _buildAttendanceHistoryList(),
             ),
           ],
         ),
@@ -43,19 +73,46 @@ class _AttendantPageState extends State<AttendantPage> {
     );
   }
 
-  void _submitForm() {
+  Widget _buildAttendanceHistoryList() {
+    return ListView.builder(
+      itemCount: _attendanceHistory.length,
+      itemBuilder: (context, index) {
+        Attendant attendant = _attendanceHistory[index];
+        return ListTile(
+          title: Text(attendant.username),
+          subtitle: Text(attendant.location),
+          trailing: Text(
+            '${attendant.timestamp.hour}:${attendant.timestamp.minute}, ${attendant.timestamp.day}/${attendant.timestamp.month}/${attendant.timestamp.year}',
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _submitForm() async {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
     String name = _nameController.text;
-    String location = _locationController.text;
+    String location =
+        "${position.latitude},${position.longitude}"; // Convert LatLng to String
 
-    // You can handle the submitted data as needed, such as saving to a database or printing to the console
-    print('Name: $name, Location: $location, Timestamp: ${DateTime.now()}');
+    AttendantHelper helper = AttendantHelper();
+    await AttendantHelper.initialize();
+    Attendant newAttendant = Attendant(
+      username: name,
+      location: location, // Use LatLng instead of GeoPoint
+      timestamp: DateTime.now(),
+    );
+    await helper.insertAttendant(newAttendant);
 
-    // You can also navigate away or show a success message to the user
+    _nameController.clear();
+    _locationController.clear();
+
+    _loadAttendanceHistory();
   }
 
   @override
   void dispose() {
-    // Clean up the controllers when the widget is disposed
     _nameController.dispose();
     _locationController.dispose();
     super.dispose();

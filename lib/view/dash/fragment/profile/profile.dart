@@ -62,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
     // For demonstration, let's assume session manager has a method getCurrentUser() that returns a user object
     var currentUser = SessionManager.getCurrentUser();
     if (currentUser != null) {
-      _nameController.text = currentUser.name;
+      _nameController.text = currentUser.username;
       _emailController.text = currentUser.email;
       _phoneNumberController.text = currentUser.phoneNumber;
     }
